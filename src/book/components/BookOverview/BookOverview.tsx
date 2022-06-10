@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Book } from "../../book";
-import { BookDetails } from "../BookDetails/BookDetails";
+import { useBookService } from "../../services/BooksService";
 import {
-  Grid,
   TableContainer,
   Table,
   TableHead,
@@ -11,81 +11,51 @@ import {
   TableBody,
   Paper,
 } from "@mui/material";
+import { Spinner } from "../../../shared/components/Sipnner/Spinner";
 
 export interface Props {}
 
 export const BookOverview = () => {
+  const [loading, setLoading] = useState(true);
+  const { findAll } = useBookService();
   const [books, setBooks] = useState<Book[]>([]);
-  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    setBooks([
-      {
-        id: 1,
-        authors: "John Example",
-        title: "Example Book",
-      },
-      {
-        id: 2,
-        authors: "Joe Smith",
-        title: "Another Book",
-      },
-    ]);
+    findAll().then((books: Book[]) => {
+      setBooks(books);
+      setLoading(false);
+    });
   }, []);
-  const selectBook = (book: Book): void => {
-    setSelectedBook(book);
-  };
-  const isBookSelected = (book: Book): boolean => book === selectedBook;
 
-  const updateBook = (bookToUpdate: Book) => {
-    setBooks((prevBooks) =>
-      prevBooks.map((book) =>
-        book.id === bookToUpdate.id ? bookToUpdate : book,
-      ),
-    );
-    setSelectedBook(bookToUpdate);
-  };
+  if (loading) return <Spinner />;
 
   return (
-    <Grid container spacing={2}>
-      <Grid item md={8}>
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>#</TableCell>
-                <TableCell>Authors</TableCell>
-                <TableCell>Title</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {books.map((book, index) => (
-                <TableRow
-                  hover
-                  key={book.id}
-                  onClick={() => selectBook(book)}
-                  selected={isBookSelected(book)}
-                >
-                  <TableCell component="th" scope="row">
-                    {index + 1}
-                  </TableCell>
-                  <TableCell>{book.authors}</TableCell>
-                  <TableCell>{book.title}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Grid>
-      <Grid item md={4}>
-        {selectedBook && (
-          <BookDetails
-            key={selectedBook.id}
-            book={selectedBook}
-            onBookChange={updateBook}
-          />
-        )}
-      </Grid>
-    </Grid>
+    <TableContainer component={Paper}>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>#</TableCell>
+            <TableCell>Authors</TableCell>
+            <TableCell>Title</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {books.map((book, index) => (
+            <TableRow
+              hover
+              key={book.id}
+              onClick={() => navigate(`/book-app/book/${book.id}`)}
+            >
+              <TableCell component="th" scope="row">
+                {index + 1}
+              </TableCell>
+              <TableCell>{book.authors}</TableCell>
+              <TableCell>{book.title}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 };
